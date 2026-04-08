@@ -11,7 +11,7 @@ supabase = get_supabase_client()
 
 
 def _get_current_user(request: Request) -> Optional[dict]:
-    """Helper to get current user from token"""
+    
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
@@ -31,31 +31,27 @@ def _get_current_user(request: Request) -> Optional[dict]:
 
 
 async def generate_model(request: Request):
-    """Generate 3D model"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
             return JSONResponse({"error": "Authentication required"}, status_code=401)
-        
-        # Check credits
+
         user_credits = current_user.get("credits", 0)
         if user_credits < 1:
             return JSONResponse({"error": "Insufficient credits. Please purchase more credits."}, status_code=402)
-        
-        # Get form data
+
         form = await request.form()
         prompt = form.get("prompt")
         
         if not prompt:
             return JSONResponse({"error": "Prompt is required"}, status_code=400)
-        
-        # Check if images were uploaded (not supported in mock - just warn)
+
         image_files = form.getlist("images")
         if image_files:
-            # Images uploaded but mock generation doesn't support them - just log it
+
             pass
-        
-        # Mock generation (in production, call actual AI service)
+
         generation = {
             "id": str(uuid4()),
             "user_id": current_user["id"],
@@ -66,14 +62,12 @@ async def generate_model(request: Request):
             "credits_used": 1,
             "created_at": datetime.utcnow().isoformat()
         }
-        
-        # Deduct credits
+
         supabase.table("users").update({
             "credits": user_credits - 1,
             "updated_at": datetime.utcnow().isoformat()
         }).eq("id", current_user["id"]).execute()
-        
-        # Save generation
+
         response = supabase.table("generations").insert(generation).execute()
         
         return response.data[0]
@@ -82,7 +76,7 @@ async def generate_model(request: Request):
 
 
 async def list_generations(request: Request, saved_only: bool = False):
-    """Get user's generations"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -100,7 +94,7 @@ async def list_generations(request: Request, saved_only: bool = False):
 
 
 async def get_generation(request: Request, generation_id: str):
-    """Get single generation"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -112,8 +106,7 @@ async def get_generation(request: Request, generation_id: str):
             return JSONResponse({"error": "Generation not found"}, status_code=404)
         
         generation = response.data[0]
-        
-        # Check ownership
+
         if generation["user_id"] != current_user["id"] and current_user.get("role") != "admin":
             return JSONResponse({"error": "Access denied"}, status_code=403)
         
@@ -123,7 +116,7 @@ async def get_generation(request: Request, generation_id: str):
 
 
 async def save_generation(request: Request, generation_id: str):
-    """Save generation to gallery"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -147,7 +140,7 @@ async def save_generation(request: Request, generation_id: str):
 
 
 async def delete_generation(request: Request, generation_id: str):
-    """Delete generation"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -171,7 +164,7 @@ async def delete_generation(request: Request, generation_id: str):
 
 
 async def get_gallery(request: Request):
-    """Get user's gallery (saved generations)"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:

@@ -12,7 +12,7 @@ supabase = get_supabase_client()
 
 
 def _get_current_user(request: Request) -> Optional[dict]:
-    """Helper to get current user from token"""
+    
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
@@ -32,7 +32,7 @@ def _get_current_user(request: Request) -> Optional[dict]:
 
 
 def _require_admin(request: Request) -> Optional[dict]:
-    """Helper to check if user is admin"""
+    
     user = _get_current_user(request)
     if not user:
         return None
@@ -41,10 +41,8 @@ def _require_admin(request: Request) -> Optional[dict]:
     return user
 
 
-# ==================== Plans ====================
-
 async def list_plans():
-    """Get all plans"""
+    
     try:
         response = supabase.table("plans").select("*").order("price").execute()
         return response.data
@@ -53,7 +51,7 @@ async def list_plans():
 
 
 async def get_plan(plan_id: str):
-    """Get single plan"""
+    
     try:
         response = supabase.table("plans").select("*").eq("id", plan_id).execute()
         if not response.data:
@@ -64,7 +62,7 @@ async def get_plan(plan_id: str):
 
 
 async def create_plan(request: Request):
-    """Create new plan (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -77,8 +75,7 @@ async def create_plan(request: Request):
         
         if not name or not price or not credits:
             return JSONResponse({"error": "Name, price, and credits are required"}, status_code=400)
-        
-        # Ensure features is a list
+
         features = body.get("features", [])
         if features is None:
             features = []
@@ -109,7 +106,7 @@ async def create_plan(request: Request):
 
 
 async def update_plan(request: Request, plan_id: str):
-    """Update plan (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -117,8 +114,7 @@ async def update_plan(request: Request, plan_id: str):
         
         body = await request.json()
         update_data = {k: v for k, v in body.items() if v is not None}
-        
-        # Ensure features is a list
+
         if "features" in update_data:
             if update_data["features"] is None:
                 update_data["features"] = []
@@ -146,7 +142,7 @@ async def update_plan(request: Request, plan_id: str):
 
 
 async def delete_plan(request: Request, plan_id: str):
-    """Delete plan (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -162,10 +158,8 @@ async def delete_plan(request: Request, plan_id: str):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-# ==================== Credit Packs ====================
-
 async def list_credit_packs(active_only: bool = True):
-    """Get all credit packs"""
+    
     try:
         query = supabase.table("credit_packs").select("*")
         
@@ -179,7 +173,7 @@ async def list_credit_packs(active_only: bool = True):
 
 
 async def get_credit_pack(pack_id: str):
-    """Get single credit pack"""
+    
     try:
         response = supabase.table("credit_packs").select("*").eq("id", pack_id).execute()
         if not response.data:
@@ -190,7 +184,7 @@ async def get_credit_pack(pack_id: str):
 
 
 async def create_credit_pack(request: Request):
-    """Create new credit pack (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -225,7 +219,7 @@ async def create_credit_pack(request: Request):
 
 
 async def update_credit_pack(request: Request, pack_id: str):
-    """Update credit pack (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -255,7 +249,7 @@ async def update_credit_pack(request: Request, pack_id: str):
 
 
 async def delete_credit_pack(request: Request, pack_id: str):
-    """Delete credit pack (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:

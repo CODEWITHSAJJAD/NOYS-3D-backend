@@ -13,7 +13,6 @@ from pathlib import Path
 
 settings = get_settings()
 
-# Create uploads directory
 UPLOAD_DIR = Path("D:/ClientProject/backend/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -25,10 +24,8 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Mount static files for uploads
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
-# Add middleware in order (last added = first to execute)
 app.add_middleware(TimeoutMiddleware, timeout=30.0)  # Timeout first
 app.add_middleware(RateLimiter, calls=100, period=60)  # Rate limiting
 app.add_middleware(CacheMiddleware)  # Simple caching
@@ -43,8 +40,6 @@ app.add_middleware(
 )
 
 
-# ==================== Root & Health ====================
-
 @app.get("/")
 async def root():
     return {
@@ -56,11 +51,10 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Enhanced health check with database status"""
+    
     import time
     import psutil
-    
-    # Check database connection
+
     db_status = "healthy"
     db_latency = 0
     try:
@@ -92,8 +86,6 @@ async def health_check():
     }
 
 
-# ==================== Auth Routes ====================
-
 @app.post("/api/v1/auth/register")
 async def register(request: Request):
     return await AuthController.signup(request)
@@ -119,8 +111,6 @@ async def logout():
     return AuthController.logout()
 
 
-# ==================== User Routes ====================
-
 @app.get("/api/v1/user/profile")
 async def get_user_profile(request: Request):
     return await UserController.get_user_profile(request)
@@ -136,14 +126,10 @@ async def change_password(request: Request):
     return await UserController.change_password(request)
 
 
-# ==================== Contact Routes ====================
-
 @app.post("/api/v1/contact")
 async def submit_contact(request: Request):
     return await UserController.submit_contact(request)
 
-
-# ==================== Category Routes ====================
 
 @app.get("/api/v1/categories")
 async def list_categories():
@@ -170,8 +156,6 @@ async def delete_category(request: Request, category_id: str):
     return await ProductController.delete_category(request, category_id)
 
 
-# ==================== Product Routes ====================
-
 @app.get("/api/v1/products")
 async def list_products(request: Request, category: str = None, active_only: bool = True):
     return await ProductController.list_products(category=category, active_only=active_only)
@@ -196,8 +180,6 @@ async def update_product(request: Request, product_id: str):
 async def delete_product(request: Request, product_id: str):
     return await ProductController.delete_product(request, product_id)
 
-
-# ==================== Plan Routes ====================
 
 @app.get("/api/v1/plans")
 async def list_plans():
@@ -224,8 +206,6 @@ async def delete_plan(request: Request, plan_id: str):
     return await PlanController.delete_plan(request, plan_id)
 
 
-# ==================== Credit Pack Routes ====================
-
 @app.get("/api/v1/credit-packs")
 async def list_credit_packs(active_only: bool = True):
     return await PlanController.list_credit_packs(active_only=active_only)
@@ -251,8 +231,6 @@ async def delete_credit_pack(request: Request, pack_id: str):
     return await PlanController.delete_credit_pack(request, pack_id)
 
 
-# ==================== Order Routes ====================
-
 @app.post("/api/v1/orders")
 async def create_order(request: Request):
     return await OrderController.create_order(request)
@@ -273,8 +251,6 @@ async def update_order_status(request: Request, order_id: str):
     return await OrderController.update_order_status(request, order_id)
 
 
-# ==================== Payment Routes ====================
-
 @app.post("/api/v1/payments/subscribe")
 async def subscribe_to_plan(request: Request):
     return await PaymentController.subscribe_to_plan(request)
@@ -294,8 +270,6 @@ async def list_payments(request: Request):
 async def stripe_webhook(request: Request):
     return await PaymentController.stripe_webhook(request)
 
-
-# ==================== Generation Routes ====================
 
 @app.post("/api/v1/generations/generate")
 async def generate_model(request: Request):
@@ -326,8 +300,6 @@ async def save_generation(request: Request, generation_id: str):
 async def delete_generation(request: Request, generation_id: str):
     return await GenerationController.delete_generation(request, generation_id)
 
-
-# ==================== Admin Routes ====================
 
 @app.get("/api/v1/admin/stats")
 async def get_stats(request: Request):
@@ -374,23 +346,19 @@ async def update_settings(request: Request):
     return await AdminController.update_settings(request)
 
 
-# ==================== File Upload Endpoints ====================
-
 @app.post("/api/v1/upload/image")
 async def upload_image(file: UploadFile = File(...)):
-    """Upload image file"""
+    
     try:
-        # Validate file type
+
         allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
         if file.content_type not in allowed_types:
             return JSONResponse({"error": "Invalid file type. Only JPEG, PNG, WEBP, GIF allowed"}, status_code=400)
-        
-        # Generate unique filename
+
         file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
         unique_filename = f"{uuid.uuid4()}.{file_ext}"
         file_path = UPLOAD_DIR / unique_filename
-        
-        # Save file
+
         content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
@@ -407,19 +375,17 @@ async def upload_image(file: UploadFile = File(...)):
 
 @app.post("/api/v1/upload/generation")
 async def upload_generation(file: UploadFile = File(...)):
-    """Upload generated 3D model file (STL/OBJ)"""
+    
     try:
-        # Validate file type
+
         allowed_types = ["model/stl", "model/obj", "application/octet-stream"]
         if file.content_type not in allowed_types and not file.filename.endswith(('.stl', '.obj')):
             return JSONResponse({"error": "Invalid file type. Only STL and OBJ files allowed"}, status_code=400)
-        
-        # Generate unique filename
+
         file_ext = file.filename.split(".")[-1] if "." in file.filename else "stl"
         unique_filename = f"gen_{uuid.uuid4()}.{file_ext}"
         file_path = UPLOAD_DIR / unique_filename
-        
-        # Save file
+
         content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
@@ -436,15 +402,13 @@ async def upload_generation(file: UploadFile = File(...)):
 
 @app.get("/uploads/{filename}")
 async def get_uploaded_file(filename: str):
-    """Serve uploaded files"""
+    
     from fastapi.responses import FileResponse
     file_path = UPLOAD_DIR / filename
     if file_path.exists():
         return FileResponse(file_path)
     return JSONResponse({"error": "File not found"}, status_code=404)
 
-
-# ==================== Global Exception Handler ====================
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):

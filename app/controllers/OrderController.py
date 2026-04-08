@@ -11,7 +11,7 @@ supabase = get_supabase_client()
 
 
 def _get_current_user(request: Request) -> Optional[dict]:
-    """Helper to get current user from token"""
+    
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
@@ -31,7 +31,7 @@ def _get_current_user(request: Request) -> Optional[dict]:
 
 
 async def create_order(request: Request):
-    """Create new order"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -43,8 +43,7 @@ async def create_order(request: Request):
         
         if not items or not shipping_address:
             return JSONResponse({"error": "Items and shipping address are required"}, status_code=400)
-        
-        # Calculate total
+
         total = sum(item.get("price", 0) * item.get("quantity", 1) for item in items)
         
         order = {
@@ -65,7 +64,7 @@ async def create_order(request: Request):
 
 
 async def list_orders(request: Request):
-    """Get user's orders"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -78,13 +77,12 @@ async def list_orders(request: Request):
 
 
 async def get_order(request: Request, order_id: str):
-    """Get single order"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
             return JSONResponse({"error": "Authentication required"}, status_code=401)
-        
-        # Check if admin
+
         is_admin = current_user.get("role") == "admin"
         
         query = supabase.table("orders").select("*").eq("id", order_id)
@@ -101,7 +99,7 @@ async def get_order(request: Request, order_id: str):
 
 
 async def update_order_status(request: Request, order_id: str):
-    """Update order status (admin only)"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:

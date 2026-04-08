@@ -14,7 +14,7 @@ settings = get_settings()
 
 
 def _get_current_user(request: Request) -> Optional[dict]:
-    """Helper to get current user from token"""
+    
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
@@ -34,7 +34,7 @@ def _get_current_user(request: Request) -> Optional[dict]:
 
 
 async def subscribe_to_plan(request: Request):
-    """Subscribe to a plan"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -45,17 +45,15 @@ async def subscribe_to_plan(request: Request):
         
         if not plan_id:
             return JSONResponse({"error": "Plan ID is required"}, status_code=400)
-        
-        # Get plan details
+
         plan_response = supabase.table("plans").select("*").eq("id", plan_id).execute()
         if not plan_response.data:
             return JSONResponse({"error": "Plan not found"}, status_code=404)
         
         plan = plan_response.data[0]
-        
-        # Check if Stripe is configured
+
         if not settings.stripe_secret_key:
-            # Mock payment for development
+
             payment = {
                 "id": str(uuid4()),
                 "user_id": current_user["id"],
@@ -66,8 +64,7 @@ async def subscribe_to_plan(request: Request):
                 "created_at": datetime.utcnow().isoformat(),
                 "updated_at": datetime.utcnow().isoformat()
             }
-            
-            # Update user's subscription and credits
+
             supabase.table("users").update({
                 "subscription_plan": plan["name"].lower().replace(" ", "_"),
                 "credits": current_user.get("credits", 0) + plan["credits"],
@@ -83,7 +80,7 @@ async def subscribe_to_plan(request: Request):
 
 
 async def buy_credits(request: Request):
-    """Buy credit pack"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -94,17 +91,15 @@ async def buy_credits(request: Request):
         
         if not credit_pack_id:
             return JSONResponse({"error": "Credit pack ID is required"}, status_code=400)
-        
-        # Get credit pack details
+
         pack_response = supabase.table("credit_packs").select("*").eq("id", credit_pack_id).execute()
         if not pack_response.data:
             return JSONResponse({"error": "Credit pack not found"}, status_code=404)
         
         pack = pack_response.data[0]
-        
-        # Check if Stripe is configured
+
         if not settings.stripe_secret_key:
-            # Mock payment for development
+
             payment = {
                 "id": str(uuid4()),
                 "user_id": current_user["id"],
@@ -115,8 +110,7 @@ async def buy_credits(request: Request):
                 "created_at": datetime.utcnow().isoformat(),
                 "updated_at": datetime.utcnow().isoformat()
             }
-            
-            # Add credits to user
+
             supabase.table("users").update({
                 "credits": current_user.get("credits", 0) + pack["credits"],
                 "updated_at": datetime.utcnow().isoformat()
@@ -131,13 +125,12 @@ async def buy_credits(request: Request):
 
 
 async def list_payments(request: Request):
-    """Get user's payments"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
             return JSONResponse({"error": "Authentication required"}, status_code=401)
-        
-        # Only admin can see all payments
+
         if current_user.get("role") == "admin":
             response = supabase.table("payments").select("*").order("created_at", desc=True).execute()
         else:
@@ -149,12 +142,11 @@ async def list_payments(request: Request):
 
 
 async def stripe_webhook(request: Request):
-    """Handle Stripe webhook"""
+    
     try:
         if not settings.stripe_secret_key:
             return JSONResponse({"error": "Stripe not configured"}, status_code=503)
-        
-        # TODO: Implement Stripe webhook handler
+
         return {"message": "Webhook received"}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -11,7 +11,7 @@ supabase = get_supabase_client()
 
 
 def _get_current_user(request: Request) -> Optional[dict]:
-    """Helper to get current user from token"""
+    
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
@@ -31,7 +31,7 @@ def _get_current_user(request: Request) -> Optional[dict]:
 
 
 async def submit_contact(request: Request):
-    """Submit contact form"""
+    
     try:
         body = await request.json()
         name = body.get("name")
@@ -40,8 +40,7 @@ async def submit_contact(request: Request):
         
         if not name or not email or not message:
             return JSONResponse({"error": "Name, email, and message are required"}, status_code=400)
-        
-        # Store contact form submission
+
         contact = {
             "id": str(uuid4()),
             "name": name,
@@ -49,16 +48,15 @@ async def submit_contact(request: Request):
             "message": message,
             "created_at": datetime.utcnow().isoformat()
         }
-        
-        # Create a contact table if not exists, or just return success
-        # For now, we'll return success
+
+
         return {"message": "Thank you for your message! We'll get back to you soon."}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 async def change_password(request: Request):
-    """Change user password"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -70,8 +68,7 @@ async def change_password(request: Request):
         
         if not current_password or not new_password:
             return JSONResponse({"error": "Current and new password are required"}, status_code=400)
-        
-        # Verify current password
+
         user_response = supabase.table("users").select("password_hash").eq("id", current_user["id"]).execute()
         if not user_response.data:
             return JSONResponse({"error": "User not found"}, status_code=404)
@@ -80,8 +77,7 @@ async def change_password(request: Request):
         
         if not verify_password(current_password, stored_hash):
             return JSONResponse({"error": "Current password is incorrect"}, status_code=400)
-        
-        # Hash new password and update
+
         new_hash = get_password_hash(new_password)
         
         supabase.table("users").update({
@@ -95,7 +91,7 @@ async def change_password(request: Request):
 
 
 async def get_user_profile(request: Request):
-    """Get full user profile including shipping address"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:
@@ -117,7 +113,7 @@ async def get_user_profile(request: Request):
 
 
 async def update_user_profile(request: Request):
-    """Update user profile including shipping address"""
+    
     try:
         current_user = _get_current_user(request)
         if not current_user:

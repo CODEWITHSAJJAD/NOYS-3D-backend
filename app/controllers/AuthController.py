@@ -10,17 +10,17 @@ supabase = get_supabase_client()
 
 
 def register():
-    """Register new user"""
+    
     try:
         request = Request
-        # This will be called via dependency injection in routes
+
         return {"message": "Register endpoint"}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
 def login():
-    """Login user"""
+    
     try:
         return {"message": "Login endpoint"}
     except Exception as e:
@@ -28,7 +28,7 @@ def login():
 
 
 async def signup(request: Request):
-    """Create new user account"""
+    
     try:
         body = await request.json()
         email = body.get("email")
@@ -37,13 +37,11 @@ async def signup(request: Request):
         
         if not email or not password or not name:
             return JSONResponse({"error": "Email, password, and name are required"}, status_code=400)
-        
-        # Check if user exists
+
         existing = supabase.table("users").select("id").eq("email", email).execute()
         if existing.data:
             return JSONResponse({"error": "Email already registered"}, status_code=400)
-        
-        # Create user
+
         user_id = str(uuid4())
         password_hash = get_password_hash(password)
         
@@ -60,8 +58,7 @@ async def signup(request: Request):
         }
         
         supabase.table("users").insert(user).execute()
-        
-        # Create token
+
         access_token = create_access_token(data={"sub": user_id})
         
         return {"access_token": access_token, "token_type": "bearer", "user": {"id": user_id, "email": email, "name": name, "role": "user"}}
@@ -70,7 +67,7 @@ async def signup(request: Request):
 
 
 async def login(request: Request):
-    """Login user and return JWT token"""
+    
     try:
         body = await request.json()
         email = body.get("email")
@@ -78,19 +75,16 @@ async def login(request: Request):
         
         if not email or not password:
             return JSONResponse({"error": "Email and password are required"}, status_code=400)
-        
-        # Find user
+
         response = supabase.table("users").select("*").eq("email", email).execute()
         if not response.data:
             return JSONResponse({"error": "Invalid email or password"}, status_code=401)
         
         user = response.data[0]
-        
-        # Verify password
+
         if not verify_password(password, user["password_hash"]):
             return JSONResponse({"error": "Invalid email or password"}, status_code=401)
-        
-        # Create token
+
         access_token = create_access_token(data={"sub": user["id"]})
         
         return {
@@ -111,7 +105,7 @@ async def login(request: Request):
 
 
 async def get_me(request: Request):
-    """Get current user info"""
+    
     try:
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
@@ -145,7 +139,7 @@ async def get_me(request: Request):
 
 
 async def update_me(request: Request):
-    """Update current user info"""
+    
     try:
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
@@ -174,5 +168,5 @@ async def update_me(request: Request):
 
 
 def logout():
-    """Logout user"""
+    
     return {"message": "Successfully logged out"}

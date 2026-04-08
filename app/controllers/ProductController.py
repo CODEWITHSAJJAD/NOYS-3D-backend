@@ -11,7 +11,7 @@ supabase = get_supabase_client()
 
 
 def _get_current_user(request: Request) -> Optional[dict]:
-    """Helper to get current user from token"""
+    
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
@@ -31,7 +31,7 @@ def _get_current_user(request: Request) -> Optional[dict]:
 
 
 def _require_admin(request: Request) -> Optional[dict]:
-    """Helper to check if user is admin"""
+    
     user = _get_current_user(request)
     if not user:
         return None
@@ -40,10 +40,8 @@ def _require_admin(request: Request) -> Optional[dict]:
     return user
 
 
-# ==================== Categories ====================
-
 async def list_categories():
-    """Get all categories"""
+    
     try:
         response = supabase.table("categories").select("*").order("name").execute()
         return response.data
@@ -52,7 +50,7 @@ async def list_categories():
 
 
 async def get_category(category_id: str):
-    """Get single category"""
+    
     try:
         response = supabase.table("categories").select("*").eq("id", category_id).execute()
         if not response.data:
@@ -63,7 +61,7 @@ async def get_category(category_id: str):
 
 
 async def create_category(request: Request):
-    """Create new category (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -76,8 +74,7 @@ async def create_category(request: Request):
         
         if not name or not slug:
             return JSONResponse({"error": "Name and slug are required"}, status_code=400)
-        
-        # Check slug exists
+
         existing = supabase.table("categories").select("id").eq("slug", slug).execute()
         if existing.data:
             return JSONResponse({"error": "Category with this slug already exists"}, status_code=400)
@@ -102,7 +99,7 @@ async def create_category(request: Request):
 
 
 async def update_category(request: Request, category_id: str):
-    """Update category (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -130,13 +127,12 @@ async def update_category(request: Request, category_id: str):
 
 
 async def delete_category(request: Request, category_id: str):
-    """Delete category (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
             return JSONResponse({"error": "Admin access required"}, status_code=403)
-        
-        # Check if category has products
+
         products = supabase.table("products").select("id").eq("category_id", category_id).execute()
         if products.data:
             return JSONResponse({"error": "Cannot delete category with existing products"}, status_code=400)
@@ -151,10 +147,8 @@ async def delete_category(request: Request, category_id: str):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-# ==================== Products ====================
-
 async def list_products(category: Optional[str] = None, active_only: bool = True):
-    """Get all products with optional filtering"""
+    
     try:
         query = supabase.table("products").select("*")
         
@@ -173,7 +167,7 @@ async def list_products(category: Optional[str] = None, active_only: bool = True
 
 
 async def get_product(product_id: str):
-    """Get single product"""
+    
     try:
         response = supabase.table("products").select("*").eq("id", product_id).execute()
         if not response.data:
@@ -184,7 +178,7 @@ async def get_product(product_id: str):
 
 
 async def create_product(request: Request):
-    """Create new product (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
@@ -196,14 +190,12 @@ async def create_product(request: Request):
         
         if not name or not price:
             return JSONResponse({"error": "Name and price are required"}, status_code=400)
-        
-        # Handle category_ids - convert to category_id for DB
+
         category_ids = body.pop("category_ids", None)
         category_id = None
         if category_ids and isinstance(category_ids, list) and len(category_ids) > 0:
             category_id = category_ids[0]
-        
-        # Handle status
+
         is_active = True
         if "status" in body:
             is_active = body["status"] == "active"
@@ -233,29 +225,26 @@ async def create_product(request: Request):
 
 
 async def update_product(request: Request, product_id: str):
-    """Update product (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:
             return JSONResponse({"error": "Admin access required"}, status_code=403)
         
         body = await request.json()
-        
-        # Handle category_ids - convert to category_id for DB
+
         if "category_ids" in body:
             category_ids = body.pop("category_ids")
             if category_ids and isinstance(category_ids, list) and len(category_ids) > 0:
                 body["category_id"] = category_ids[0]
-        
-        # Map status to is_active
+
         if "status" in body:
             body["is_active"] = body["status"] == "active"
             body.pop("status", None)
         
         update_data = {k: v for k, v in body.items() if v is not None}
         update_data["updated_at"] = datetime.utcnow().isoformat()
-        
-        # Log for debugging
+
         import logging
         logging.info(f"Updating product {product_id} with data: {update_data}")
         
@@ -272,7 +261,7 @@ async def update_product(request: Request, product_id: str):
 
 
 async def delete_product(request: Request, product_id: str):
-    """Delete product (admin only)"""
+    
     try:
         admin = _require_admin(request)
         if not admin:

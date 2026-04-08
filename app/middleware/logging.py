@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import sys
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -20,33 +19,26 @@ logger = logging.getLogger(__name__)
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """
-    Comprehensive request/response logging for production
-    """
+    
     
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
-        
-        # Generate request ID
+
         import uuid
         request_id = str(uuid.uuid4())[:8]
-        
-        # Log incoming request
+
         logger.info(f"[{request_id}] {request.method} {request.url.path}")
         
         try:
             response = await call_next(request)
-            
-            # Calculate processing time
+
             process_time = time.time() - start_time
-            
-            # Log response
+
             logger.info(
                 f"[{request_id}] {request.method} {request.url.path} "
                 f"- Status: {response.status_code} - Time: {process_time:.3f}s"
             )
-            
-            # Add timing header
+
             response.headers["X-Process-Time"] = str(process_time)
             response.headers["X-Request-ID"] = request_id
             
@@ -54,8 +46,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             
         except Exception as e:
             process_time = time.time() - start_time
-            
-            # Log error with traceback
+
             logger.error(
                 f"[{request_id}] {request.method} {request.url.path} "
                 f"- Error: {str(e)} - Time: {process_time:.3f}s"
@@ -73,9 +64,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
-    """
-    Global error handling middleware
-    """
+    
     
     async def dispatch(self, request: Request, call_next):
         try:
@@ -99,9 +88,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 from fastapi import HTTPException
 
 class TimeoutMiddleware(BaseHTTPMiddleware):
-    """
-    Request timeout handling
-    """
+    
     
     def __init__(self, app, timeout: float = 30.0):
         super().__init__(app)

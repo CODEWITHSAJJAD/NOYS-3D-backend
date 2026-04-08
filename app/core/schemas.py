@@ -24,8 +24,6 @@ class OrderStatus(str, Enum):
     DELIVERED = "delivered"
     CANCELLED = "cancelled"
 
-
-# Auth Schemas
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
@@ -60,8 +58,6 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     avatar_url: Optional[str] = None
 
-
-# Category Schemas
 class CategoryCreate(BaseModel):
     name: str
     slug: str
@@ -84,8 +80,6 @@ class CategoryUpdate(BaseModel):
     slug: Optional[str] = None
     description: Optional[str] = None
 
-
-# Product Schemas
 class ProductCreate(BaseModel):
     name: str
     description: Optional[str] = None
@@ -117,8 +111,6 @@ class ProductUpdate(BaseModel):
     category_id: Optional[UUID] = None
     is_active: Optional[bool] = None
 
-
-# Plan Schemas
 class PlanCreate(BaseModel):
     name: str
     price: float = Field(..., gt=0)
@@ -150,8 +142,6 @@ class PlanUpdate(BaseModel):
     is_popular: Optional[bool] = None
     stripe_price_id: Optional[str] = None
 
-
-# Credit Pack Schemas
 class CreditPackCreate(BaseModel):
     credits: int = Field(..., gt=0)
     price: float = Field(..., gt=0)
@@ -177,8 +167,6 @@ class CreditPackUpdate(BaseModel):
     stripe_price_id: Optional[str] = None
     is_active: Optional[bool] = None
 
-
-# Order Schemas
 class ShippingAddress(BaseModel):
     first_name: str
     last_name: str
@@ -213,8 +201,6 @@ class OrderResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# Generation Schemas
 class GenerationCreate(BaseModel):
     prompt: str
     images: Optional[List[str]] = None
@@ -233,8 +219,6 @@ class GenerationResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# Payment Schemas (Stripe placeholder)
 class PaymentCreate(BaseModel):
     type: str  # subscription, credits
     plan_id: Optional[UUID] = None
@@ -253,8 +237,6 @@ class PaymentResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# Admin Schemas
 class AdminStats(BaseModel):
     total_users: int
     total_orders: int
