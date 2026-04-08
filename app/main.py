@@ -13,7 +13,7 @@ from pathlib import Path
 
 settings = get_settings()
 
-UPLOAD_DIR = Path("D:/ClientProject/backend/uploads")
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads"))
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(
@@ -33,7 +33,7 @@ app.add_middleware(RequestLoggingMiddleware)  # Request logging
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://192.168.100.7:3000", "http://192.168.100.7"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://192.168.100.7:3000", "http://192.168.100.7", "https://noys-3d-backend-production.up.railway.app", "https://*.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
