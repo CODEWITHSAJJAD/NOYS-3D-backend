@@ -27,6 +27,7 @@ class Settings(BaseSettings):
         "http://192.168.100.7:3000",
         "http://192.168.100.7",
         "https://noys-3d-backend-production.up.railway.app",
+        "https://noys-3-d-prints.vercel.app",
         "https://*.vercel.app"
     ]
 
