@@ -10,3 +10,4 @@ supabase==2.10.0
 httpx==0.27.2
 python-dotenv==1.0.1
 stripe==8.10.0
+psutil==5.9.8
