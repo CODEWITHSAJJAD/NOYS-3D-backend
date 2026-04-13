@@ -1,7 +1,7 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.db.connection import get_supabase_client
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, get_password_hash
 from app.core.config import get_settings
 from datetime import datetime
 from typing import Optional
@@ -228,5 +228,33 @@ async def update_settings(request: Request):
             return JSONResponse({"error": "Admin access required"}, status_code=403)
 
         return {"message": "Settings updated successfully"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+async def reset_user_password(request: Request, user_id: str):
+    
+    try:
+        admin = _get_current_admin(request)
+        if not admin:
+            return JSONResponse({"error": "Admin access required"}, status_code=403)
+        
+        body = await request.json()
+        new_password = body.get("new_password")
+        
+        if not new_password or len(new_password) < 6:
+            return JSONResponse({"error": "Password must be at least 6 characters"}, status_code=400)
+        
+        password_hash = get_password_hash(new_password)
+        
+        response = supabase.table("users").update({
+            "password_hash": password_hash,
+            "updated_at": datetime.utcnow().isoformat()
+        }).eq("id", user_id).execute()
+        
+        if not response.data:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        return {"message": "Password reset successfully"}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -33,7 +33,7 @@ app.add_middleware(RequestLoggingMiddleware)  # Request logging
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://192.168.100.7:3000", "http://192.168.100.7", "https://noys-3d-backend-production.up.railway.app", "https://noys-3-d-prints.vercel.app", "https://*.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -334,6 +334,11 @@ async def update_user(request: Request, user_id: str):
 @app.delete("/api/v1/admin/users/{user_id}")
 async def delete_user(request: Request, user_id: str):
     return await AdminController.delete_user(request, user_id)
+
+
+@app.post("/api/v1/admin/users/{user_id}/reset-password")
+async def reset_user_password(request: Request, user_id: str):
+    return await AdminController.reset_user_password(request, user_id)
 
 
 @app.get("/api/v1/admin/orders")
