@@ -33,7 +33,7 @@ app.add_middleware(RequestLoggingMiddleware)  # Request logging
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://192.168.100.7:3000", "http://192.168.100.7", "https://noys-3d-backend-production.up.railway.app", "https://noys-3-d-prints.vercel.app", "https://*.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -259,6 +259,16 @@ async def subscribe_to_plan(request: Request):
 @app.post("/api/v1/payments/buy-credits")
 async def buy_credits(request: Request):
     return await PaymentController.buy_credits(request)
+
+
+@app.post("/api/v1/payments/checkout")
+async def create_checkout_session(request: Request):
+    return await PaymentController.create_checkout_session(request)
+
+
+@app.get("/api/v1/payments/config")
+async def get_stripe_config(request: Request):
+    return await PaymentController.get_stripe_config(request)
 
 
 @app.get("/api/v1/payments")
